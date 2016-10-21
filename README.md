@@ -9,19 +9,19 @@ If you're on windows, you might want to try [MSYS2](https://msys2.github.io/).
 
 Setup
 --
-Download both IliasDownload.sh and IliasDownload-Init.sh or clone via git into a directory.
-Open IliasDownload-Init.sh in an editor, add your login credentials, specify which folders you need and save the file.
+Download both IliasDownload.sh and IliasDownloadInit.sh or clone via git into a directory.
+Open IliasDownloadInit.sh in an editor, add your login credentials, specify which folders you need and save the file.
 
 Run
 --
-Run the script IliasDownload-Init.sh.
+Run the script IliasDownloadInit.sh.
 ```
 #Make it runnable
-chmod +x IliasDownload-Init.sh
+chmod +x IliasDownloadInit.sh
 #Run
-./IliasDownload-Init.sh
+./IliasDownloadInit.sh
 ```
 or
 ```
-bash IliasDownload.sh
+bash IliasDownloadInit.sh
 ```

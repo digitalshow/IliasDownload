@@ -33,29 +33,6 @@ ilias_request() {
 	curl -s -L -b $COOKIE_PATH -c $COOKIE_PATH $2 $ILIAS_URL$1
 }
 
-ilias_request_ex() {
-	#echo "Requesting $ILIAS_URL$1 with params $2"
-	COOKIES=
-	if [ -f $COOKIE_PATH ] ; then
-		COOKIES=`awk -F= "BEGIN {OFS=\"\"; ORS=\" \"} {arr[\\\$1]=\\\$2} END { for (i in arr) { print i, \"=\", arr[i] } }" $COOKIE_PATH`
-		COOKIES=${COOKIES%' '}
-		COOKIES=${COOKIES%';'}
-	fi
-	#echo "Cookies: $COOKIES"
-	curl -s -b "$COOKIES" -D $HEAD_PATH $2 $ILIAS_URL$1
-	LOCATION=
-	if [ -f $HEAD_PATH ] ; then
-		cat $HEAD_PATH | grep -oP "Set-Cookie: \K[^;]*;" >> $COOKIE_PATH
-		LOCATION=`cat $HEAD_PATH | grep -oP "Location: $ILIAS_URL\K.*"`
-		if [ "$LOCATION" == "" ] ; then
-			LOCATION=`cat $HEAD_PATH | grep -oP "Location: /\K.*"`
-		fi
-	fi
-	if [ "$LOCATION" != "" ] ; then
-		ilias_request "$LOCATION"
-	fi
-}
-
 do_login() {	
 	echo "Sending login information..."
 	ilias_request "$ILIAS_LOGIN_POST" "--data-urlencode username=$ILIAS_USERNAME --data-urlencode password=$ILIAS_PASSWORD" > /dev/null
