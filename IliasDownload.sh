@@ -16,8 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-HEAD_PATH=/tmp/ilias-head.txt
-COOKIE_PATH=/tmp/ilias-cookies.txt
+if [ -z "$COOKIE_PATH" ] ; then
+	COOKIE_PATH=/tmp/ilias-cookies.txt
+fi
 
 # If you're not at Uni Stuttgart, you might still be able to use this script by changing stuff below
 
@@ -28,6 +29,10 @@ ILIAS_HOME="ilias.php?baseClass=ilPersonalDesktopGUI&cmd=jumpToSelectedItems"
 ILIAS_LOGOUT="logout.php?lang=de"
 
 # DON'T TOUCH FROM HERE ON
+
+ILIAS_DL_COUNT=0
+ILIAS_IGN_COUNT=0
+ILIAS_FAIL_COUNT=0
 
 ilias_request() {
 	curl -s -L -b $COOKIE_PATH -c $COOKIE_PATH $2 $ILIAS_URL$1
@@ -74,13 +79,16 @@ function fetch_folder {
 		cat "$HISTORY_FILE" | grep "$file" > /dev/null
 		if [ $? -eq 0 ] ; then
 			echo "File already downloaded."
+			((ILIAS_IGN_COUNT++))
 		else
 			echo "Downloading $file"
 			ilias_request "$file" "-O -J"
 			if [ $? -eq 0 ] ; then
 				echo "$file" >> "$HISTORY_FILE"
+				((ILIAS_DL_COUNT++))
 			else
 				echo "Download failed"
+				((ILIAS_FAIL_COUNT++))
 			fi
 		fi
 	done
@@ -100,4 +108,10 @@ function fetch_folder {
 		fi
 		fetch_folder "$FOLD_NUM" "$2/$FOLDER_NAME"
 	done
+}
+
+function print_stat() {
+	echo
+	echo "Downloaded $ILIAS_DL_COUNT new files, ignored $ILIAS_IGN_COUNT files, $ILIAS_FAIL_COUNT failed."
+	echo
 }

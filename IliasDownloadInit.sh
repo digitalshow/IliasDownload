@@ -38,4 +38,5 @@ fetch_folder "1088459" "$MY_STUDIES_FOLDER/HM3/VO"
 
 # Don't modify
 do_logout
+print_stat
 rm $COOKIE_PATH
