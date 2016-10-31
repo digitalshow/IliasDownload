@@ -34,6 +34,22 @@ ILIAS_DL_COUNT=0
 ILIAS_IGN_COUNT=0
 ILIAS_FAIL_COUNT=0
 
+check_grep_availability() {
+	echo "abcde" | grep -oP "abc\Kde"
+	GREP_AV=`echo "$?"`
+}
+
+do_grep() {
+	if [ "$GREP_AV" -eq 0 ] ; then
+		grep -oP "$1"
+	else
+		# Workaround if no Perl regex supported
+		local prefix=`echo "$1" | awk -F: 'BEGIN {FS="\\\\K"}{print $1}'`
+		local match=`echo "$1" | awk -F: 'BEGIN {FS="\\\\K"}{print $2}'`
+		grep -o "$prefix$match" | grep -o "$match"
+	fi
+}
+
 ilias_request() {
 	curl -s -L -b $COOKIE_PATH -c $COOKIE_PATH $2 $ILIAS_URL$1
 }
@@ -73,7 +89,7 @@ function fetch_folder {
 	local CONTENT_PAGE=`ilias_request "goto_Uni_Stuttgart_fold_$1.html"`
 	
 	# Files
-	local ITEMS=`echo $CONTENT_PAGE | grep -oP "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}\Kgoto_${ILIAS_PREFIX}_file_[0-9]*_download.html"`
+	local ITEMS=`echo $CONTENT_PAGE | do_grep "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}\Kgoto_${ILIAS_PREFIX}_file_[0-9]*_download.html"`
 	
 	for file in $ITEMS ; do
 		cat "$HISTORY_FILE" | grep "$file" > /dev/null
@@ -83,26 +99,27 @@ function fetch_folder {
 		else
 			echo "Downloading $file"
 			ilias_request "$file" "-O -J"
-			if [ $? -eq 0 ] ; then
+			local RESULT=$?
+			if [ $RESULT -eq 0 ] ; then
 				echo "$file" >> "$HISTORY_FILE"
 				((ILIAS_DL_COUNT++))
 			else
-				echo "Download failed"
+				echo "Download failed: $RESULT"
 				((ILIAS_FAIL_COUNT++))
 			fi
 		fi
 	done
 	
 	# Folders
-	local ITEMS=`echo "$CONTENT_PAGE" | grep -oP "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}\Kgoto_${ILIAS_PREFIX}_fold_[0-9]*.html"`
+	local ITEMS=`echo "$CONTENT_PAGE" | do_grep "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}\Kgoto_${ILIAS_PREFIX}_fold_[0-9]*.html"`
 	
 	for folder in $ITEMS ; do
-		local FOLDER_NAME=`echo "$CONTENT_PAGE" | grep -oP "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}${folder}\" class=\"il_ContainerItemTitle\"[^>]*>\K[^<]*"`
+		local FOLDER_NAME=`echo "$CONTENT_PAGE" | do_grep "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}${folder}\" class=\"il_ContainerItemTitle\"[^>]*>\K[^<]*"`
 		
 		# Replace / character
 		local FOLDER_NAME=${FOLDER_NAME//\//-}
 		echo "Entering folder $FOLDER_NAME"
-		local FOLD_NUM=`echo "$folder" | grep -oP "fold_\K[0-9]*"`
+		local FOLD_NUM=`echo "$folder" | do_grep "fold_\K[0-9]*"`
 		if [ ! -e "$2/$FOLDER_NAME" ] ; then
 			mkdir "$2/$FOLDER_NAME"
 		fi
@@ -115,3 +132,5 @@ function print_stat() {
 	echo "Downloaded $ILIAS_DL_COUNT new files, ignored $ILIAS_IGN_COUNT files, $ILIAS_FAIL_COUNT failed."
 	echo
 }
+
+check_grep_availability
