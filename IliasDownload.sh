@@ -92,11 +92,20 @@ function fetch_folder {
 	local ITEMS=`echo $CONTENT_PAGE | do_grep "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}\Kgoto_${ILIAS_PREFIX}_file_[0-9]*_download.html"`
 	
 	for file in $ITEMS ; do
+		local DO_DOWNLOAD=1
 		cat "$HISTORY_FILE" | grep "$file" > /dev/null
 		if [ $? -eq 0 ] ; then
-			echo "File already downloaded."
-			((ILIAS_IGN_COUNT++))
-		else
+			local ITEM=`echo $CONTENT_PAGE | do_grep "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}${file}.*<div style=\"clear:both;\"></div>"`
+			echo "$ITEM" | grep "geändert" > /dev/null
+			if [ $? -eq 0 ] ; then
+				echo "File was changed, download again..."
+			else
+				echo "File already downloaded."
+				((ILIAS_IGN_COUNT++))
+				DO_DOWNLOAD=0
+			fi
+		fi
+		if [ $DO_DOWNLOAD -eq 1 ] ; then
 			echo "Downloading $file"
 			ilias_request "$file" "-O -J"
 			local RESULT=$?
