@@ -33,6 +33,7 @@ ILIAS_LOGOUT="logout.php?lang=de"
 ILIAS_DL_COUNT=0
 ILIAS_IGN_COUNT=0
 ILIAS_FAIL_COUNT=0
+ILIAS_DL_NAMES=""
 
 check_grep_availability() {
 	echo "abcde" | grep -oP "abc\Kde"
@@ -54,7 +55,10 @@ ilias_request() {
 	curl -s -L -b $COOKIE_PATH -c $COOKIE_PATH $2 $ILIAS_URL$1
 }
 
-do_login() {	
+do_login() {
+	if [ -f $COOKIE_PATH ] ; then
+		rm $COOKIE_PATH
+	fi
 	echo "Sending login information..."
 	ilias_request "$ILIAS_LOGIN_POST" "--data-urlencode username=$ILIAS_USERNAME --data-urlencode password=$ILIAS_PASSWORD" > /dev/null
 	if [ $? -ne 0 ] ; then
@@ -75,6 +79,10 @@ function do_logout {
 	ilias_request "$ILIAS_LOGOUT" > /dev/null
 }
 
+function get_filename {
+	ilias_request "$1" "-I" | do_grep "Content-Description: \K(.*)"
+}
+
 function fetch_folder {
 	if [ ! -d "$2" ] ; then
 		echo "$2 is not a directory!"
@@ -84,6 +92,7 @@ function fetch_folder {
 	if [ ! -f "$HISTORY_FILE" ] ; then
 		touch "$HISTORY_FILE"
 	fi
+	local HISTORY_CONTENT=`cat "$HISTORY_FILE"`
 	
 	echo "Fetching folder $1 to $2"
 	local CONTENT_PAGE=`ilias_request "goto_Uni_Stuttgart_fold_$1.html"`
@@ -93,27 +102,39 @@ function fetch_folder {
 	
 	for file in $ITEMS ; do
 		local DO_DOWNLOAD=1
-		cat "$HISTORY_FILE" | grep "$file" > /dev/null
+		local NUMBER=`echo "$file" | do_grep "[0-9]*"`
+		echo -n "[$NUMBER] "
+		echo "$HISTORY_CONTENT" | grep "$file" > /dev/null
 		if [ $? -eq 0 ] ; then
 			local ITEM=`echo $CONTENT_PAGE | do_grep "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}${file}.*<div style=\"clear:both;\"></div>"`
 			echo "$ITEM" | grep "geändert" > /dev/null
 			if [ $? -eq 0 ] ; then
-				echo "File was changed, download again..."
+				local FILENAME=`get_filename "$file"`
+				echo -n "$FILENAME changed "
+				local PART_NAME="${FILENAME%.*}"
+				local PART_EXT="${FILENAME##*.}"
+				local PART_DATE=`date +%Y%m%d-%H%M%S`
+				mv "$FILENAME" "${PART_NAME}.${PART_DATE}.${PART_EXT}"
 			else
-				echo "File already downloaded."
+				echo "exists"
 				((ILIAS_IGN_COUNT++))
 				DO_DOWNLOAD=0
 			fi
 		fi
 		if [ $DO_DOWNLOAD -eq 1 ] ; then
-			echo "Downloading $file"
+			local FILENAME=`get_filename "$file"`
+			echo -n "$FILENAME downloading... "
+			
 			ilias_request "$file" "-O -J"
 			local RESULT=$?
 			if [ $RESULT -eq 0 ] ; then
 				echo "$file" >> "$HISTORY_FILE"
 				((ILIAS_DL_COUNT++))
+				echo "done"
+				ILIAS_DL_NAMES="${ILIAS_DL_NAMES} - ${FILENAME}
+"
 			else
-				echo "Download failed: $RESULT"
+				echo "failed: $RESULT"
 				((ILIAS_FAIL_COUNT++))
 			fi
 		fi
@@ -139,7 +160,7 @@ function fetch_folder {
 function print_stat() {
 	echo
 	echo "Downloaded $ILIAS_DL_COUNT new files, ignored $ILIAS_IGN_COUNT files, $ILIAS_FAIL_COUNT failed."
-	echo
+	echo "$ILIAS_DL_NAMES"
 }
 
 check_grep_availability
