@@ -24,7 +24,7 @@ fi
 
 ILIAS_URL="https://ilias3.uni-stuttgart.de/"
 ILIAS_PREFIX="Uni_Stuttgart"
-ILIAS_LOGIN_POST="ilias.php?lang=de&client_id=Uni_Stuttgart&cmd=post&cmdClass=ilstartupgui&cmdNode=t6&baseClass=ilStartUpGUI&rtoken="
+ILIAS_LOGIN_POST="ilias.php?lang=de&client_id=Uni_Stuttgart&cmd=post&cmdClass=ilstartupgui&cmdNode=uo&baseClass=ilStartUpGUI&rtoken="
 ILIAS_HOME="ilias.php?baseClass=ilPersonalDesktopGUI&cmd=jumpToSelectedItems"
 ILIAS_LOGOUT="logout.php?lang=de"
 
@@ -60,9 +60,10 @@ do_login() {
 		rm $COOKIE_PATH
 	fi
 	echo "Sending login information..."
-	ilias_request "$ILIAS_LOGIN_POST" "--data-urlencode username=$ILIAS_USERNAME --data-urlencode password=$ILIAS_PASSWORD" > /dev/null
-	if [ $? -ne 0 ] ; then
-		echo "Failed sending login information."
+	ilias_request "$ILIAS_LOGIN_POST" "--data-urlencode username=$ILIAS_USERNAME --data-urlencode password=$ILIAS_PASSWORD --data-urlencode cmd[doStandardAuthentication]=Anmelden" > /dev/null
+	result="$?"
+	if [ "$result" -ne 0 ] ; then
+		echo "Failed sending login information: $result."
 		exit
 	fi
 	
