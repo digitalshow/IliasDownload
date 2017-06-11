@@ -24,7 +24,7 @@ fi
 
 ILIAS_URL="https://ilias3.uni-stuttgart.de/"
 ILIAS_PREFIX="Uni_Stuttgart"
-ILIAS_LOGIN_POST="ilias.php?lang=de&client_id=Uni_Stuttgart&cmd=post&cmdClass=ilstartupgui&cmdNode=uo&baseClass=ilStartUpGUI&rtoken="
+ILIAS_LOGIN_POST="ilias.php?lang=de&client_id=Uni_Stuttgart&cmd=post&cmdClass=ilstartupgui&cmdNode=v9&baseClass=ilStartUpGUI&rtoken="
 ILIAS_HOME="ilias.php?baseClass=ilPersonalDesktopGUI&cmd=jumpToSelectedItems"
 ILIAS_LOGOUT="logout.php?lang=de"
 
