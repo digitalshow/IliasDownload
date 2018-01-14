@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # IliasDownload.sh: A download script for ILIAS, an e-learning platform.
-# Copyright (C) 2016 Ingo Koinzer
+# Copyright (C) 2016 - 2018 Ingo Koinzer
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ fi
 
 ILIAS_URL="https://ilias3.uni-stuttgart.de/"
 ILIAS_PREFIX="Uni_Stuttgart"
-ILIAS_LOGIN_POST="ilias.php?lang=de&client_id=Uni_Stuttgart&cmd=post&cmdClass=ilstartupgui&cmdNode=va&baseClass=ilStartUpGUI&rtoken="
+ILIAS_LOGIN_GET="login.php?target=&client_id=Uni_Stuttgart&cmd=force_login&lang=de"
 ILIAS_HOME="ilias.php?baseClass=ilPersonalDesktopGUI&cmd=jumpToSelectedItems"
 ILIAS_LOGOUT="logout.php?lang=de"
 
@@ -59,19 +59,27 @@ do_login() {
 	if [ -f $COOKIE_PATH ] ; then
 		rm $COOKIE_PATH
 	fi
+	echo "Getting form url..."
+	local LOGIN_PAGE=`ilias_request "$ILIAS_LOGIN_GET"`
+	ILIAS_LOGIN_POST=`echo "$LOGIN_PAGE" | tr -d "\r\n" | do_grep "name=\"formlogin\".*action=\"\K[^\"]*"`
+	if [ "$?" -ne 0 ] ; then
+		echo "Failed getting login form url."
+		exit 1
+	fi
+	ILIAS_LOGIN_POST=`echo "$ILIAS_LOGIN_POST" | sed 's/&amp;/\&/g'`
 	echo "Sending login information..."
 	ilias_request "$ILIAS_LOGIN_POST" "--data-urlencode username=$ILIAS_USERNAME --data-urlencode password=$ILIAS_PASSWORD --data-urlencode cmd[doStandardAuthentication]=Anmelden" > /dev/null
 	result="$?"
 	if [ "$result" -ne 0 ] ; then
 		echo "Failed sending login information: $result."
-		exit
+		exit 2
 	fi
 	
 	echo "Checking if logged in..."
 	ilias_request "$ILIAS_HOME" | grep ilMailGUI > /dev/null
 	if [ $? -ne 0 ] ; then
 		echo "Home page check failed. Is your login information correct?"
-		exit
+		exit 3
 	fi
 }
 
