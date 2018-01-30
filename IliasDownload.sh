@@ -89,7 +89,7 @@ function do_logout {
 }
 
 function get_filename {
-	ilias_request "$1" "-I" | do_grep "Content-Description: \K(.*)"
+	ilias_request "$1" "-I" | do_grep "Content-Description: \K(.*)" | tr -cd '[:print:]'
 }
 
 function fetch_folder {
