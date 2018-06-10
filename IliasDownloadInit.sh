@@ -43,6 +43,10 @@ fetch_folder "1088459" "$MY_STUDIES_FOLDER/HM3/VO"
 # Steuerungstechnik mit Antriebstechnik
 fetch_folder "1088620" "$MY_STUDIES_FOLDER/STAT"
 
+# To download the a course with subfolders, add the type prefix, e.g.
+# https://ilias3.uni-stuttgart.de/goto_Uni_Stuttgart_crs_1417864.html
+#                                                    ^^^^^^^^^^^
+fetch_folder "crs_1417864" "$MY_STUDIES_FOLDER/ERT/Projekt"
 
 # Don't modify
 do_logout

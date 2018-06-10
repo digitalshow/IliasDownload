@@ -104,7 +104,13 @@ function fetch_folder {
 	local HISTORY_CONTENT=`cat "$HISTORY_FILE"`
 	
 	echo "Fetching folder $1 to $2"
-	local CONTENT_PAGE=`ilias_request "goto_Uni_Stuttgart_fold_$1.html"`
+
+	echo "$1" | do_grep "^[0-9]*$" > /dev/null
+	if [ $? -eq 0 ] ; then
+		local CONTENT_PAGE=`ilias_request "goto_Uni_Stuttgart_fold_$1.html"`
+	else
+		local CONTENT_PAGE=`ilias_request "goto_Uni_Stuttgart_$1.html"`
+	fi
 	
 	# Files
 	local ITEMS=`echo $CONTENT_PAGE | do_grep "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}\Kgoto_${ILIAS_PREFIX}_file_[0-9]*_download.html"`
