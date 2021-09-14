@@ -113,7 +113,7 @@ function fetch_folder {
 	fi
 	
 	# Files
-	local ITEMS=`echo $CONTENT_PAGE | do_grep "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}\Kgoto_${ILIAS_PREFIX}_file_[0-9]*_download.html"`
+	local ITEMS=`echo $CONTENT_PAGE | do_grep "<h[34] class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}\Kgoto_${ILIAS_PREFIX}_file_[0-9]*_download.html"`
 	
 	for file in $ITEMS ; do
 		local DO_DOWNLOAD=1
@@ -121,7 +121,7 @@ function fetch_folder {
 		echo -n "[$NUMBER] "
 		echo "$HISTORY_CONTENT" | grep "$file" > /dev/null
 		if [ $? -eq 0 ] ; then
-			local ITEM=`echo $CONTENT_PAGE | do_grep "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}${file}.*<div style=\"clear:both;\"></div>"`
+			local ITEM=`echo $CONTENT_PAGE | do_grep "<h[34] class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}${file}.*<div style=\"clear:both;\"></div>"`
 			echo "$ITEM" | grep "geändert" > /dev/null
 			if [ $? -eq 0 ] ; then
 				local FILENAME=`get_filename "$file"`
@@ -156,10 +156,10 @@ function fetch_folder {
 	done
 	
 	# Folders
-	local ITEMS=`echo "$CONTENT_PAGE" | do_grep "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}\Kgoto_${ILIAS_PREFIX}_fold_[0-9]*.html"`
+	local ITEMS=`echo "$CONTENT_PAGE" | do_grep "<h[34] class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}\Kgoto_${ILIAS_PREFIX}_fold_[0-9]*.html"`
 	
 	for folder in $ITEMS ; do
-		local FOLDER_NAME=`echo "$CONTENT_PAGE" | do_grep "<h4 class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}${folder}\" class=\"il_ContainerItemTitle\"[^>]*>\K[^<]*"`
+		local FOLDER_NAME=`echo "$CONTENT_PAGE" | do_grep "<h[34] class=\"il_ContainerItemTitle\"><a href=\"${ILIAS_URL}${folder}\"[^>]*>\K[^<]*"`
 		
 		# Replace / character
 		local FOLDER_NAME=${FOLDER_NAME//\//-}
